@@ -1,4 +1,4 @@
-module github.com/inahym196/vc-tools
+module github.com/inahym196/govc-tools
 
 go 1.19
 
