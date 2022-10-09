@@ -33,35 +33,38 @@ var (
 	}
 )
 
-type ConnectVars struct {
+type connectArgs struct {
 	UserName   string
 	Password   string
 	HostName   string
-	Port       int
+	Port       string
 	DisableTLS bool
 }
 
-func ConnectVcenter(ctx *context.Context, c *cli.Context) (*govmomi.Client, error) {
-	vars := ConnectVars{
+func NewConnectArgs(c *cli.Context) (*connectArgs, error) {
+	return &connectArgs{
 		UserName:   c.String("user"),
 		Password:   c.String("pass"),
 		HostName:   c.String("host"),
-		Port:       c.Int("port"),
+		Port:       strconv.Itoa(c.Int("port")),
 		DisableTLS: c.Bool("disable-tls"),
-	}
+	}, nil
+}
+
+func ConnectVcenter(ctx *context.Context, args *connectArgs) (*govmomi.Client, error) {
 	u := &url.URL{
-		Host: vars.HostName + ":" + strconv.Itoa(vars.Port),
-		User: url.UserPassword(vars.UserName, vars.Password),
-		Path: "/sdk",
+		Scheme: "https",
+		Host:   args.HostName + ":" + args.Port,
+		User:   url.UserPassword(args.UserName, args.Password),
+		Path:   "/sdk",
 	}
-	if vars.DisableTLS {
+	if args.DisableTLS {
 		u.Scheme = "http"
-	} else {
-		u.Scheme = "https"
 	}
 	client, err := govmomi.NewClient(*ctx, u, true)
 	if err != nil {
 		return nil, err
 	}
+
 	return client, nil
 }

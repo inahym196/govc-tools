@@ -33,7 +33,12 @@ func list_portgroup(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	vcenter, err := vcenter.ConnectVcenter(&ctx, c)
+	args, err := vcenter.NewConnectArgs(c)
+	if err != nil {
+		exit(err)
+	}
+
+	vcenter, err := vcenter.ConnectVcenter(&ctx, args)
 	if err != nil {
 		exit(err)
 	}
@@ -43,6 +48,7 @@ func list_portgroup(c *cli.Context) error {
 	if err != nil {
 		exit(err)
 	}
+
 	var refs []types.ManagedObjectReference
 	for _, nw := range nws {
 		ref := nw.Reference()
