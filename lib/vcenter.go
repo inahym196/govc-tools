@@ -12,23 +12,24 @@ import (
 var (
 	ConnectFlags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "user",
-			Value: "user",
+			Name:   "user",
+			EnvVar: "GOVCTOOLS_USER",
 		},
 		cli.StringFlag{
-			Name:  "pass",
-			Value: "pass",
+			Name:   "pass",
+			EnvVar: "GOVCTOOLS_PASS",
 		},
 		cli.StringFlag{
-			Name:  "host",
-			Value: "localhost",
+			Name:   "host",
+			EnvVar: "GOVCTOOLS_HOST",
 		},
 		cli.IntFlag{
-			Name:  "port, p",
-			Value: 8989,
+			Name:   "port, p",
+			EnvVar: "GOVCTOOLS_PORT",
 		},
 		cli.BoolFlag{
-			Name: "disable-tls",
+			Name:   "disable-tls",
+			EnvVar: "GOVCTOOLS_DISABLE_TLS",
 		},
 	}
 )

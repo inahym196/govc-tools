@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/inahym196/govc-tools/command"
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli"
 )
 
@@ -25,16 +25,28 @@ var (
 	}
 )
 
+func exit(err error) {
+	fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+	os.Exit(1)
+}
+
+func load_env() {
+	err := godotenv.Load(".cred.env")
+	if err != nil {
+		exit(err)
+	}
+}
+
 func main() {
+	load_env()
 	app := cli.NewApp()
 	app.Name = "govc-tools"
 	app.Usage = "vcenter cli tools"
-	app.Version = "0.0.0"
 	app.Commands = []cli.Command{
 		portgroupCommand,
 		permissionCommand,
 	}
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		exit(err)
 	}
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"os"
-
 	vcenter "github.com/inahym196/govc-tools/lib"
 	"github.com/urfave/cli"
 	"github.com/vmware/govmomi/find"
@@ -24,29 +22,24 @@ var (
 	}
 )
 
-func exit(err error) {
-	fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-	os.Exit(1)
-}
-
 func list_portgroup(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	args, err := vcenter.NewConnectArgs(c)
 	if err != nil {
-		exit(err)
+		return err
 	}
 
 	vcenter, err := vcenter.ConnectVcenter(&ctx, args)
 	if err != nil {
-		exit(err)
+		return err
 	}
 
 	f := find.NewFinder(vcenter.Client, true)
 	nws, err := f.NetworkList(ctx, "/DC0/network/*")
 	if err != nil {
-		exit(err)
+		return err
 	}
 
 	var refs []types.ManagedObjectReference
