@@ -7,9 +7,12 @@ import (
 )
 
 var (
-	PortgroupFlags = []cli.Flag{
+	portgroupFlags = []cli.Flag{
 		cli.StringFlag{
 			Name: "message",
+		},
+		cli.BoolFlag{
+			Name: "verbose, v",
 		},
 	}
 	PortgroupCommands = []cli.Command{
@@ -17,7 +20,7 @@ var (
 			Name:   "list",
 			Usage:  "show portgroup list",
 			Action: print_hoge,
-			Flags:  append(connectFlags, PortgroupFlags...),
+			Flags:  append(connectFlags, portgroupFlags...),
 		},
 		cli.Command{
 			Name:   "create",
