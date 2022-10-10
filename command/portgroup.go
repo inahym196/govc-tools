@@ -19,6 +19,11 @@ var (
 			Action: list_portgroup,
 			Flags:  append(vcenter.ConnectFlags, portgroupFlags...),
 		},
+		cli.Command{
+			Name:        "filter",
+			Usage:       "vds portgroup filterをhogehogeする",
+			Subcommands: PortgroupFilterCommands,
+		},
 	}
 )
 
