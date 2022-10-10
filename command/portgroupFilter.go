@@ -28,11 +28,16 @@ var (
 			Action: export_portgroup_filter,
 			Flags:  append(vcenter.ConnectFlags, portgroupFilterCommonFlags...),
 		},
+		cli.Command{
+			Name:   "edit",
+			Usage:  "edit portgroup's filter",
+			Action: edit_portgroup_filter,
+			Flags:  append(vcenter.ConnectFlags, portgroupFilterCommonFlags...),
+		},
 	}
 )
 
-func export_portgroup_filter(c *cli.Context) error {
-
+func edit_portgroup_filter(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -47,8 +52,8 @@ func export_portgroup_filter(c *cli.Context) error {
 	}
 
 	finder := find.NewFinder(vcenter.Client, true)
-	dc, _ := finder.DatacenterList(ctx, "*")
-	finder.SetDatacenter(dc[0])
+	dc, _ := finder.DefaultDatacenter(ctx)
+	finder.SetDatacenter(dc)
 	net, err := finder.Network(ctx, "/DC0/network/DVS0")
 	if err != nil {
 		return err
@@ -60,9 +65,33 @@ func export_portgroup_filter(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	rule1Quali1 := types.DvsIpNetworkRuleQualifier{
+		DestinationAddress: &types.IpAddress{},
+	}
+	dvsTrafficFilterConfig := types.DvsTrafficFilterConfig{
+		TrafficRuleset: &types.DvsTrafficRuleset{
+			Enabled: &[]bool{true}[0],
+			Rules: []types.DvsTrafficRule{
+				types.DvsTrafficRule{
+					Action:      &types.DvsAcceptNetworkRuleAction{},
+					Description: "rule1",
+					Key:         "rule1",
+					Qualifier: []types.BaseDvsNetworkRuleQualifier{
+						rule1Quali1.GetDvsNetworkRuleQualifier(),
+					},
+				},
+			},
+		},
+	}
+	dvPortSetting := &types.DVPortSetting{
+		FilterPolicy: &types.DvsFilterPolicy{
+			FilterConfig: []types.BaseDvsFilterConfig{dvsTrafficFilterConfig.GetDvsTrafficFilterConfig()},
+		},
+	}
 	spec := &types.VMwareDVSConfigSpec{
 		DVSConfigSpec: types.DVSConfigSpec{
-			Name: "hoge",
+			Name:              "hoge",
+			DefaultPortConfig: dvPortSetting,
 		},
 		MaxMtu: 100,
 	}
@@ -84,34 +113,35 @@ func export_portgroup_filter(c *cli.Context) error {
 	pc.RetrieveOne(ctx, netRef.Reference(), nil, &data)
 	pp.Print(data)
 	return nil
-	// rule1Quali1 := types.DvsIpNetworkRuleQualifier{
-	// 	DestinationAddress: &types.IpAddress{},
-	// }
-	// dvsTrafficFilterConfig := types.DvsTrafficFilterConfig{
-	// 	TrafficRuleset: &types.DvsTrafficRuleset{
-	// 		Enabled: &[]bool{true}[0],
-	// 		Rules: []types.DvsTrafficRule{
-	// 			types.DvsTrafficRule{
-	// 				Action:      &types.DvsAcceptNetworkRuleAction{},
-	// 				Description: "rule1",
-	// 				Key:         "rule1",
-	// 				Qualifier: []types.BaseDvsNetworkRuleQualifier{
-	// 					rule1Quali1.GetDvsNetworkRuleQualifier(),
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// }
-	// dvPortSetting := &types.DVPortSetting{
-	// 	FilterPolicy: &types.DvsFilterPolicy{
-	// 		FilterConfig: []types.BaseDvsFilterConfig{
-	// 			dvsTrafficFilterConfig.GetDvsTrafficFilterConfig(),
-	// 		},
-	// 	},
-	// }
-	// dvPortConfigSpec := types.DVPortConfigSpec{
-	// 	Name:    "hoge",
-	// 	Setting: dvPortSetting,
-	// }
-	// pp.Print(dvPortConfigSpec.Setting)
+}
+
+func export_portgroup_filter(c *cli.Context) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	args, err := vcenter.NewConnectArgs(c)
+	if err != nil {
+		return err
+	}
+
+	vcenter, err := vcenter.ConnectVcenter(&ctx, args)
+	if err != nil {
+		return err
+	}
+
+	finder := find.NewFinder(vcenter.Client, true)
+	dc, _ := finder.DefaultDatacenter(ctx)
+	finder.SetDatacenter(dc)
+	net, err := finder.Network(ctx, "/DC0/network/DVS0")
+	if err != nil {
+		return err
+	}
+	dvs, _ := net.(*object.DistributedVirtualSwitch)
+	var s mo.DistributedVirtualSwitch
+	err = dvs.Properties(ctx, dvs.Reference(), []string{"config"}, &s)
+	if err != nil {
+		return err
+	}
+	pp.Print(s)
+	return nil
 }
